@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INNVIDA Professional Circle - Dashboard Completo</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15); }
+        .badge-elite { background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%); border: 3px solid #999; }
+        .badge-avanzado { background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); border: 3px solid #daa520; }
+        .badge-profesional { background: linear-gradient(135deg, #c0c0c0 0%, #d3d3d3 100%); border: 3px solid #888; }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
+    </style>
+</head>
+<body class="bg-gray-50">
+        <div style="display:flex;justify-content:center;align-items:center;padding:24px 0;">
+        <img src="logo.png" alt="INNVIDA" style="max-width:340px;height:auto;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.4));" />
+    </div>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const Dashboard = () => {
+            const [activeTab, setActiveTab] = useState('resumen');
+            const [selectedCirculo, setSelectedCirculo] = useState('elite');
+
+            // SISTEMA DE PUNTOS CON MODELO REALISTA
+            const sistemaPuntos = {
+                ratioBase: 50,
+                bonusApp: 0.40,
+                valorPunto: 15,
+                precioPruebaGenomicaSTD: 90000,
+                tasaCanje: 0.50, // 50% breakage
+                costoRealFactor: 0.25 // 25% costo real
+            };
+
+            // BENEFICIOS CON COSTOS REALES MEXICANOS
+            const circulos = {
+                elite: {
+                    nombre: 'CÍRCULO ÉLITE',
+                    subtitle: 'Referentes de Excelencia Oncológica',
+                    badge: 'badge-elite',
+                    medicos: 15,
+                    pruebasGenomicasMes: 5,
+                    infusionesMes: 540000,
+                    prescripcionMensual: 990000,
+                    comisionGenomicaMes: 50000,
+                    comisionInfusionesMes: 108000,
+                    comisionTotalMes: 158000,
+                    comisionTotalAnio: 1896000,
+                    puntosBaseMes: 19800,
+                    puntosConApp: 27720,
+                    puntosAnio: 332640,
+                    valorBeneficiosAnio: 4989600,
+                    descuentoBeneficios: 0.20,
+                    beneficios: [
+                        { 
+                            nombre: '2 Congresos Internacionales (ASCO o ESMO)', 
+                            costo: 280000, // Registro $35k USD + vuelo $25k USD + hotel 5 días $12k USD x 2 = $144k USD = ~$2.8M MXN / 10 = $280k por congreso realista
+                            costoReal: 70000, // 25%
+                            puntos: 18667, 
+                            puntosDesc: 14933,
+                            detalle: 'Incluye registro, vuelo redondo y hospedaje'
+                        },
+                        { 
+                            nombre: 'Contador/Asesor Fiscal Anual Premium', 
+                            costo: 96000, // $8k/mes × 12 meses para servicio premium
+                            costoReal: 24000,
+                            puntos: 6400, 
+                            puntosDesc: 5120,
+                            detalle: 'Contabilidad, facturación, declaraciones, planeación fiscal'
+                        },
+                        { 
+                            nombre: 'Consultorio Premium 12 meses', 
+                            costo: 180000, // $15k/mes × 12 en zona premium CDMX
+                            costoReal: 45000,
+                            puntos: 12000, 
+                            puntosDesc: 9600,
+                            detalle: 'Renta en zona premium (Polanco, Interlomas, Santa Fe)'
+                        },
+                        { 
+                            nombre: 'Certificación Board Internacional', 
+                            costo: 120000, // $6k-7k USD típico para boards internacionales
+                            costoReal: 30000,
+                            puntos: 8000, 
+                            puntosDesc: 6400,
+                            detalle: 'ESMO, ASCO o equivalente'
+                        },
+                        {
+                            nombre: '20 Vuelos Nacionales',
+                            costo: 120000, // $6k promedio × 20
+                            costoReal: 30000,
+                            puntos: 8000,
+                            puntosDesc: 6400,
+                            detalle: 'CDMX-Cancún, GDL, MTY, etc. clase turista'
+                        },
+                        {
+                            nombre: '30 Noches Hotel (Categoría Business)',
+                            costo: 90000, // $3k/noche × 30 noches
+                            costoReal: 22500,
+                            puntos: 6000,
+                            puntosDesc: 4800,
+                            detalle: 'Hoteles 4-5 estrellas en ciudades principales'
+                        },
+                        {
+                            nombre: 'Tarjetas Amazon ($50,000 MXN)',
+                            costo: 50000,
+                            costoReal: 12500,
+                            puntos: 3333,
+                            puntosDesc: 2667,
+                            detalle: 'Crédito para compras Amazon México'
+                        },
+                        {
+                            nombre: 'Tarjetas Starbucks ($24,000 MXN)',
+                            costo: 24000,
+                            costoReal: 6000,
+                            puntos: 1600,
+                            puntosDesc: 1280,
+                            detalle: '~2 bebidas diarias por año'
+                        },
+                        { 
+                            nombre: '3 Pruebas Nomad Genetics Gratis', 
+                            costo: 270000, // $90k × 3
+                            costoReal: 27000, // Costo marginal real interno
+                            puntos: 18000, 
+                            puntosDesc: 14400,
+                            detalle: 'Cualquier panel disponible en catálogo'
+                        }
+                    ]
+                },
+                avanzado: {
+                    nombre: 'CÍRCULO AVANZADO',
+                    subtitle: 'Profesionales en Crecimiento Sostenido',
+                    badge: 'badge-avanzado',
+                    medicos: 60,
+                    pruebasGenomicasMes: 3,
+                    infusionesMes: 255000,
+                    prescripcionMensual: 525000,
+                    comisionGenomicaMes: 30000,
+                    comisionInfusionesMes: 51000,
+                    comisionTotalMes: 81000,
+                    comisionTotalAnio: 972000,
+                    puntosBaseMes: 10500,
+                    puntosConApp: 14700,
+                    puntosAnio: 176400,
+                    valorBeneficiosAnio: 2646000,
+                    descuentoBeneficios: 0.10,
+                    beneficios: [
+                        { 
+                            nombre: '1 Congreso Internacional', 
+                            costo: 140000,
+                            costoReal: 35000,
+                            puntos: 9333, 
+                            puntosDesc: 8400,
+                            detalle: 'Registro + vuelo + hospedaje incluidos'
+                        },
+                        {
+                            nombre: '2 Congresos Nacionales (SMEO)',
+                            costo: 60000, // $30k cada uno (registro $8k + hotel + viáticos)
+                            costoReal: 15000,
+                            puntos: 4000,
+                            puntosDesc: 3600,
+                            detalle: 'Incluye registro y hospedaje'
+                        },
+                        { 
+                            nombre: 'Contador/Asesor Fiscal Anual', 
+                            costo: 60000, // $5k/mes × 12
+                            costoReal: 15000,
+                            puntos: 4000, 
+                            puntosDesc: 3600,
+                            detalle: 'Contabilidad y declaraciones mensuales'
+                        },
+                        { 
+                            nombre: 'Consultorio 12 meses', 
+                            costo: 120000, // $10k/mes × 12
+                            costoReal: 30000,
+                            puntos: 8000, 
+                            puntosDesc: 7200,
+                            detalle: 'Renta en zona comercial'
+                        },
+                        {
+                            nombre: '10 Vuelos Nacionales',
+                            costo: 60000,
+                            costoReal: 15000,
+                            puntos: 4000,
+                            puntosDesc: 3600,
+                            detalle: 'Principales rutas nacionales'
+                        },
+                        {
+                            nombre: '15 Noches Hotel (Categoría Business)',
+                            costo: 45000,
+                            costoReal: 11250,
+                            puntos: 3000,
+                            puntosDesc: 2700,
+                            detalle: 'Hoteles 4 estrellas'
+                        },
+                        { 
+                            nombre: '4 Cursos Online Certificados', 
+                            costo: 32000, // $8k cada uno
+                            costoReal: 8000,
+                            puntos: 2133, 
+                            puntosDesc: 1920,
+                            detalle: 'Plataformas reconocidas (Coursera, Harvard, etc.)'
+                        },
+                        { 
+                            nombre: '2 Pruebas Nomad Genetics', 
+                            costo: 180000,
+                            costoReal: 18000,
+                            puntos: 12000, 
+                            puntosDesc: 10800,
+                            detalle: 'Cualquier panel disponible'
+                        }
+                    ]
+                },
+                profesional: {
+                    nombre: 'CÍRCULO PROFESIONAL',
+                    subtitle: 'Nuevos Talentos en Oncología',
+                    badge: 'badge-profesional',
+                    medicos: 225,
+                    pruebasGenomicasMes: 1,
+                    infusionesMes: 84000,
+                    prescripcionMensual: 174000,
+                    comisionGenomicaMes: 10000,
+                    comisionInfusionesMes: 16800,
+                    comisionTotalMes: 26800,
+                    comisionTotalAnio: 321600,
+                    puntosBaseMes: 3480,
+                    puntosConApp: 4872,
+                    puntosAnio: 58464,
+                    valorBeneficiosAnio: 876960,
+                    descuentoBeneficios: 0,
+                    beneficios: [
+                        {
+                            nombre: '1 Congreso Nacional',
+                            costo: 30000,
+                            costoReal: 7500,
+                            puntos: 2000,
+                            puntosDesc: 2000,
+                            detalle: 'Registro + hospedaje'
+                        },
+                        { 
+                            nombre: 'Contador/Asesor Fiscal Anual Básico', 
+                            costo: 36000, // $3k/mes × 12
+                            costoReal: 9000,
+                            puntos: 2400, 
+                            puntosDesc: 2400,
+                            detalle: 'Facturación y declaraciones básicas'
+                        },
+                        { 
+                            nombre: 'Consultorio 6 meses', 
+                            costo: 48000, // $8k/mes × 6
+                            costoReal: 12000,
+                            puntos: 3200, 
+                            puntosDesc: 3200,
+                            detalle: 'Renta semestral'
+                        },
+                        {
+                            nombre: '5 Vuelos Nacionales',
+                            costo: 30000,
+                            costoReal: 7500,
+                            puntos: 2000,
+                            puntosDesc: 2000,
+                            detalle: 'Rutas nacionales principales'
+                        },
+                        {
+                            nombre: '7 Noches Hotel (Categoría Standard)',
+                            costo: 17500, // $2.5k/noche
+                            costoReal: 4375,
+                            puntos: 1167,
+                            puntosDesc: 1167,
+                            detalle: 'Hoteles 3-4 estrellas'
+                        },
+                        { 
+                            nombre: '6 Cursos Online', 
+                            costo: 24000,
+                            costoReal: 6000,
+                            puntos: 1600, 
+                            puntosDesc: 1600,
+                            detalle: 'Cursos especializados online'
+                        },
+                        { 
+                            nombre: 'Suscripción UpToDate Anual', 
+                            costo: 15000,
+                            costoReal: 3750,
+                            puntos: 1000, 
+                            puntosDesc: 1000,
+                            detalle: 'Acceso completo por 12 meses'
+                        },
+                        { 
+                            nombre: '1 Prueba Nomad 50% Descuento', 
+                            costo: 45000,
+                            costoReal: 4500,
+                            puntos: 3000, 
+                            puntosDesc: 3000,
+                            detalle: 'Cualquier panel con 50% desc'
+                        }
+                    ]
+                }
+            };
+
+            const tablaEquivalencias = {
+                nomad: [
+                    { prueba: 'Foundation One CDx', precio: 90000, puntosBase: 1800, puntosApp: 2520, comision: 10000 },
+                    { prueba: 'Panel Somático 592 genes', precio: 90000, puntosBase: 1800, puntosApp: 2520, comision: 10000 },
+                    { prueba: 'Biopsia Líquida Guardant360', precio: 90000, puntosBase: 1800, puntosApp: 2520, comision: 10000 },
+                    { prueba: 'Panel Germinal BRCA1/2', precio: 90000, puntosBase: 1800, puntosApp: 2520, comision: 10000 },
+                    { prueba: 'Panel Farmacogenómico', precio: 90000, puntosBase: 1800, puntosApp: 2520, comision: 10000 }
+                ],
+                sanare: [
+                    { tratamiento: 'Pembrolizumab (Keytruda)', precio: 120000, utilidad: 24000, comision20pct: 4800, puntosBase: 2400, puntosApp: 3360 },
+                    { tratamiento: 'Trastuzumab (Herceptin)', precio: 85000, utilidad: 17000, comision20pct: 3400, puntosBase: 1700, puntosApp: 2380 },
+                    { tratamiento: 'Bevacizumab (Avastin)', precio: 65000, utilidad: 13000, comision20pct: 2600, puntosBase: 1300, puntosApp: 1820 },
+                    { tratamiento: 'Rituximab (Mabthera)', precio: 45000, utilidad: 9000, comision20pct: 1800, puntosBase: 900, puntosApp: 1260 }
+                ]
+            };
+
+            const circuloData = circulos[selectedCirculo];
+
+            // Cálculo viabilidad INNVIDA
+            const calcularViabilidadINNVIDA = (nivel) => {
+                const data = circulos[nivel];
+                const puntosOtorgados = data.puntosAnio;
+                const valorTeorico = data.valorBeneficiosAnio;
+                const puntosCanjeados = Math.round(puntosOtorgados * sistemaPuntos.tasaCanje);
+                const valorCanjeado = Math.round(puntosCanjeados * sistemaPuntos.valorPunto);
+                const costoRealAnio = Math.round(valorCanjeado * sistemaPuntos.costoRealFactor);
+                const costoRealMes = Math.round(costoRealAnio / 12);
+                const ahorroAnio = data.comisionTotalAnio - costoRealAnio;
+                const ahorroMes = data.comisionTotalMes - costoRealMes;
+                const ahorroPorc = ((ahorroAnio / data.comisionTotalAnio) * 100).toFixed(1);
+                
+                return {
+                    comisionMes: data.comisionTotalMes,
+                    comisionAnio: data.comisionTotalAnio,
+                    puntosOtorgados: puntosOtorgados,
+                    valorTeorico: valorTeorico,
+                    puntosCanjeados: puntosCanjeados,
+                    valorCanjeado: valorCanjeado,
+                    costoRealMes: costoRealMes,
+                    costoRealAnio: costoRealAnio,
+                    ahorroMes: ahorroMes,
+                    ahorroAnio: ahorroAnio,
+                    ahorroPorc: ahorroPorc
+                };
+            };
+
+            // Cálculo valor médico
+            const calcularValorMedico = (nivel) => {
+                const data = circulos[nivel];
+                const valorBeneficios = data.valorBeneficiosAnio;
+                const ahorroFiscal = valorBeneficios * 0.30;
+                const valorTotal = valorBeneficios + ahorroFiscal;
+                
+                return {
+                    comisionMes: data.comisionTotalMes,
+                    comisionAnio: data.comisionTotalAnio,
+                    valorBeneficiosMes: Math.round(valorBeneficios / 12),
+                    valorBeneficiosAnio: valorBeneficios,
+                    ahorroFiscal: ahorroFiscal,
+                    valorTotalMes: Math.round(valorTotal / 12),
+                    valorTotal: valorTotal,
+                    vsComisiones: valorTotal - data.comisionTotalAnio,
+                    mejorQue: ((valorTotal / data.comisionTotalAnio - 1) * 100).toFixed(1)
+                };
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    {/* Header */}
+                    <div className="gradient-bg text-white shadow-2xl">
+                        <div className="max-w-7xl mx-auto px-8 py-10">
+                            <h1 className="text-5xl font-black mb-3">INNVIDA PROFESSIONAL CIRCLE</h1>
+                            <p className="text-xl text-blue-100 mb-2">Sistema Win-Win de Desarrollo Profesional en Oncología</p>
+                            <div className="flex gap-3 mt-4">
+                                <span className="bg-white/20 px-4 py-2 rounded-full text-sm font-semibold">💉 Sanaré</span>
+                                <span className="bg-white/20 px-4 py-2 rounded-full text-sm font-semibold">🧬 Nomad Genetics</span>
+                                <span className="bg-green-500 px-4 py-2 rounded-full text-sm font-bold pulse">📱 App 2026: +40% Puntos</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Tabs */}
+                    <div className="bg-white border-b sticky top-0 z-50 shadow-md">
+                        <div className="max-w-7xl mx-auto px-8">
+                            <div className="flex space-x-2 overflow-x-auto">
+                                {[
+                                    { id: 'resumen', label: '📊 Resumen' },
+                                    { id: 'canje', label: '🎯 Cómo Canjear' },
+                                    { id: 'equivalencias', label: '💰 Tabla Puntos' },
+                                    { id: 'circulos', label: '💎 Beneficios' },
+                                    { id: 'medicos', label: '👨‍⚕️ Valor Médicos' },
+                                    { id: 'viabilidad', label: '🏢 Viabilidad INNVIDA' }
+                                ].map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`py-4 px-6 font-bold text-sm whitespace-nowrap transition-all ${
+                                            activeTab === tab.id
+                                                ? 'border-b-4 border-blue-500 text-blue-600 bg-blue-50'
+                                                : 'border-b-4 border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="max-w-7xl mx-auto px-8 py-12">
+
+                        {/* TAB: RESUMEN */}
+                        {activeTab === 'resumen' && (
+                            <div className="space-y-8">
+                                <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-3xl p-10">
+                                    <h1 className="text-5xl font-black mb-4">🏆 Resumen Ejecutivo</h1>
+                                    <p className="text-2xl opacity-90">Por qué es mejor que comisiones tradicionales</p>
+                                </div>
+
+                                {/* Sistema de Puntos - Equivalencia */}
+                                <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl shadow-2xl p-8 border-4 border-green-400">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h2 className="text-2xl font-bold mb-2 flex items-center">
+                                                <span className="text-4xl mr-3">💰</span>
+                                                Sistema de Puntos
+                                            </h2>
+                                            <p className="text-lg opacity-90 mb-3">Cada prescripción acumula puntos automáticamente</p>
+                                            
+                                            {/* Explicación de la conversión */}
+                                            <div className="bg-white bg-opacity-20 rounded-lg p-4 max-w-md">
+                                                <div className="font-bold mb-2 text-sm">🔢 Fórmula de Conversión:</div>
+                                                <div className="space-y-1 text-sm">
+                                                    <div className="flex items-center">
+                                                        <span className="bg-white text-green-600 px-2 py-1 rounded font-mono font-bold mr-2">$50 MXN</span>
+                                                        <span className="mx-2">=</span>
+                                                        <span className="bg-white text-green-600 px-2 py-1 rounded font-mono font-bold">1 punto</span>
+                                                    </div>
+                                                    <div className="text-xs opacity-90 mt-2">
+                                                        Por eso dividimos el monto de prescripción entre 50 para calcular los puntos
+                                                    </div>
+                                                    <div className="text-xs opacity-90 mt-1 font-bold">
+                                                        Ejemplo: $90,000 ÷ 50 = 1,800 puntos base
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-white text-green-600 rounded-2xl p-6 text-center shadow-lg">
+                                            <div className="text-sm font-bold mb-1">EQUIVALENCIA</div>
+                                            <div className="text-5xl font-black">1</div>
+                                            <div className="text-sm font-bold my-2">PUNTO</div>
+                                            <div className="text-xl font-bold">=</div>
+                                            <div className="text-5xl font-black mt-2">$15</div>
+                                            <div className="text-sm font-bold">MXN en beneficios</div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-6 grid md:grid-cols-3 gap-4 text-sm">
+                                        <div className="bg-white bg-opacity-20 rounded-lg p-4">
+                                            <div className="font-bold mb-2">📱 Bonus por App</div>
+                                            <div>+40% puntos adicionales usando la app móvil</div>
+                                        </div>
+                                        <div className="bg-white bg-opacity-20 rounded-lg p-4">
+                                            <div className="font-bold mb-2">⏱️ Vigencia</div>
+                                            <div>Los puntos son válidos por 18 meses</div>
+                                        </div>
+                                        <div className="bg-white bg-opacity-20 rounded-lg p-4">
+                                            <div className="font-bold mb-2">🎯 Canje Flexible</div>
+                                            <div>Canjea por múltiples beneficios cuando quieras</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Comparativo: Comisiones vs Programa - ÉLITE Detallado */}
+                                <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-gray-200">
+                                    <h2 className="text-3xl font-bold mb-6 text-center">📊 Ejemplo Mensual: Círculo Élite</h2>
+                                    <p className="text-center text-gray-600 mb-8">Desglose completo de cómo se calcula el valor</p>
+                                    
+                                    <div className="grid md:grid-cols-3 gap-8 items-start">
+                                        {/* Sistema ANTERIOR */}
+                                        <div className="bg-red-50 rounded-2xl p-6 border-2 border-red-300">
+                                            <div className="text-center mb-4">
+                                                <div className="inline-block bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold mb-3">
+                                                    ❌ ANTES
+                                                </div>
+                                                <h3 className="text-xl font-bold text-red-900">Comisiones en Efectivo</h3>
+                                            </div>
+                                            
+                                            <div className="space-y-3">
+                                                {/* Prescripción del mes */}
+                                                <div className="bg-white rounded-lg p-3 border-l-4 border-red-400">
+                                                    <div className="text-xs text-gray-500 mb-1">📋 Prescripción mensual</div>
+                                                    <div className="font-bold text-gray-800">5 pruebas genómicas</div>
+                                                    <div className="text-sm text-gray-600">$90,000 × 5 = $450,000</div>
+                                                </div>
+                                                
+                                                <div className="bg-white rounded-lg p-3 border-l-4 border-red-400">
+                                                    <div className="text-xs text-gray-500 mb-1">💉 Infusiones del mes</div>
+                                                    <div className="font-bold text-gray-800">Valor infusiones</div>
+                                                    <div className="text-sm text-gray-600">$540,000</div>
+                                                </div>
+
+                                                {/* Línea divisoria */}
+                                                <div className="border-t-2 border-red-200 my-3"></div>
+
+                                                {/* Cálculo de comisiones */}
+                                                <div className="bg-red-100 rounded-lg p-3">
+                                                    <div className="text-xs text-red-700 font-bold mb-2">💰 CÁLCULO COMISIONES</div>
+                                                    
+                                                    <div className="space-y-2 text-sm">
+                                                        <div className="flex justify-between">
+                                                            <span className="text-gray-700">Pruebas (10%):</span>
+                                                            <span className="font-bold">$45,000</span>
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 ml-4">
+                                                            $450k × 10% = $45k
+                                                        </div>
+                                                        
+                                                        <div className="flex justify-between mt-2">
+                                                            <span className="text-gray-700">Infusiones (20%):</span>
+                                                            <span className="font-bold">$108,000</span>
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 ml-4">
+                                                            $540k × 20% = $108k
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Total */}
+                                                <div className="bg-red-600 text-white rounded-lg p-4 text-center">
+                                                    <div className="text-xs mb-1">TOTAL COMISIÓN MES</div>
+                                                    <div className="text-3xl font-black">$158k</div>
+                                                    <div className="text-xs mt-1 opacity-80">Efectivo gravable</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="mt-4 text-center text-xs text-gray-600 bg-red-100 rounded-lg p-2">
+                                                ⚠️ Paga impuestos sobre este ingreso<br/>
+                                                ⚠️ Sin beneficios adicionales
+                                            </div>
+                                        </div>
+
+                                        {/* FLECHA DE TRANSFORMACIÓN */}
+                                        <div className="text-center flex flex-col justify-center h-full">
+                                            <div className="text-6xl mb-4 animate-pulse">→</div>
+                                            <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg px-4 py-3">
+                                                <div className="font-bold text-lg">🚀 TRANSFORMACIÓN</div>
+                                                <div className="text-sm opacity-90 mt-1">Mismo volumen</div>
+                                                <div className="text-sm opacity-90">Mayor valor</div>
+                                            </div>
+                                        </div>
+
+                                        {/* Sistema NUEVO */}
+                                        <div className="bg-green-50 rounded-2xl p-6 border-2 border-green-300">
+                                            <div className="text-center mb-4">
+                                                <div className="inline-block bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold mb-3">
+                                                    ✅ AHORA
+                                                </div>
+                                                <h3 className="text-xl font-bold text-green-900">Programa de Puntos</h3>
+                                            </div>
+                                            
+                                            <div className="space-y-3">
+                                                {/* Misma prescripción */}
+                                                <div className="bg-white rounded-lg p-3 border-l-4 border-green-400">
+                                                    <div className="text-xs text-gray-500 mb-1">📋 Prescripción mensual</div>
+                                                    <div className="font-bold text-gray-800">5 pruebas genómicas</div>
+                                                    <div className="text-sm text-gray-600">$90,000 × 5 = $450,000</div>
+                                                </div>
+                                                
+                                                <div className="bg-white rounded-lg p-3 border-l-4 border-green-400">
+                                                    <div className="text-xs text-gray-500 mb-1">💉 Infusiones del mes</div>
+                                                    <div className="font-bold text-gray-800">Valor infusiones</div>
+                                                    <div className="text-sm text-gray-600">$540,000</div>
+                                                </div>
+
+                                                {/* Línea divisoria */}
+                                                <div className="border-t-2 border-green-200 my-3"></div>
+
+                                                {/* Cálculo de puntos */}
+                                                <div className="bg-green-100 rounded-lg p-3">
+                                                    <div className="text-xs text-green-700 font-bold mb-2">⭐ CÁLCULO PUNTOS</div>
+                                                    
+                                                    <div className="space-y-2 text-sm">
+                                                        <div className="flex justify-between">
+                                                            <span className="text-gray-700">Pruebas:</span>
+                                                            <span className="font-bold">12,600 pts</span>
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 ml-4">
+                                                            ($450k ÷ 50) × 1.4 app
+                                                        </div>
+                                                        
+                                                        <div className="flex justify-between mt-2">
+                                                            <span className="text-gray-700">Infusiones:</span>
+                                                            <span className="font-bold">15,120 pts</span>
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 ml-4">
+                                                            ($540k ÷ 50) × 1.4 app
+                                                        </div>
+
+                                                        <div className="border-t border-green-300 my-2"></div>
+                                                        
+                                                        <div className="flex justify-between font-bold">
+                                                            <span className="text-gray-800">Total Puntos:</span>
+                                                            <span className="text-green-600">27,720 pts</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Conversión a valor */}
+                                                <div className="bg-white rounded-lg p-3 border-2 border-green-300">
+                                                    <div className="text-xs text-gray-500 mb-2 text-center">💎 Valor en beneficios</div>
+                                                    <div className="text-center">
+                                                        <div className="text-sm text-gray-700">27,720 pts × $15</div>
+                                                        <div className="text-2xl font-black text-green-600 mt-1">$416k</div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Total */}
+                                                <div className="bg-green-600 text-white rounded-lg p-4 text-center">
+                                                    <div className="text-xs mb-1">VALOR TOTAL MES</div>
+                                                    <div className="text-3xl font-black">$416k</div>
+                                                    <div className="text-xs mt-1 opacity-80">+163% más valor</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="mt-4 text-center text-xs text-gray-600 bg-green-100 rounded-lg p-2">
+                                                ✓ Beneficios deducibles de impuestos<br/>
+                                                ✓ Inversión en desarrollo profesional
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Resumen de la diferencia */}
+                                    <div className="mt-6 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-xl p-6 text-center">
+                                        <div className="text-2xl font-bold mb-2">💰 Diferencia Mensual para el Médico</div>
+                                        <div className="text-5xl font-black mb-2">+$258,000</div>
+                                        <div className="text-lg">más valor cada mes (163% incremento)</div>
+                                    </div>
+
+                                    {/* Explicación del cálculo */}
+                                    <div className="mt-6 bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
+                                        <h4 className="font-bold text-blue-900 mb-3 flex items-center">
+                                            <span className="text-2xl mr-2">💡</span>
+                                            Cómo funciona el cálculo de puntos
+                                        </h4>
+                                        <div className="grid md:grid-cols-2 gap-6 text-sm">
+                                            <div>
+                                                <div className="font-bold text-red-700 mb-2">❌ Sistema Anterior (Comisiones):</div>
+                                                <ul className="space-y-1 text-gray-700">
+                                                    <li>• Comisión pruebas: 10% del valor</li>
+                                                    <li>• Comisión infusiones: 20% sobre utilidad</li>
+                                                    <li>• Pago en efectivo gravable</li>
+                                                    <li>• Sin beneficios adicionales</li>
+                                                </ul>
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-green-700 mb-2">✅ Sistema Nuevo (Puntos):</div>
+                                                <div className="space-y-2 text-gray-700">
+                                                    <div className="bg-green-100 rounded-lg p-3">
+                                                        <div className="font-bold text-green-800 mb-1">🔢 Conversión base:</div>
+                                                        <div className="font-mono text-sm">$50 MXN = 1 punto</div>
+                                                        <div className="text-xs mt-1">Por eso: Monto ÷ 50 = Puntos</div>
+                                                    </div>
+                                                    <ul className="space-y-1">
+                                                        <li>• Bonus app: +40% puntos adicionales</li>
+                                                        <li>• Valor punto: $15 en beneficios</li>
+                                                        <li>• Deducible + desarrollo profesional</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Ejemplo práctico paso a paso */}
+                                        <div className="mt-4 bg-white rounded-lg p-4 border-2 border-blue-300">
+                                            <div className="font-bold text-blue-900 mb-3">📝 Ejemplo paso a paso: Prueba de $90,000</div>
+                                            <div className="grid md:grid-cols-4 gap-3 text-center text-sm">
+                                                <div className="bg-blue-50 rounded-lg p-3">
+                                                    <div className="text-xs text-gray-600 mb-1">1. Precio prueba</div>
+                                                    <div className="font-bold text-lg">$90,000</div>
+                                                </div>
+                                                <div className="bg-blue-50 rounded-lg p-3">
+                                                    <div className="text-xs text-gray-600 mb-1">2. Conversión</div>
+                                                    <div className="font-bold text-lg">÷ 50</div>
+                                                    <div className="text-xs text-gray-500 mt-1">= 1,800 pts base</div>
+                                                </div>
+                                                <div className="bg-blue-50 rounded-lg p-3">
+                                                    <div className="text-xs text-gray-600 mb-1">3. Bonus app</div>
+                                                    <div className="font-bold text-lg">× 1.4</div>
+                                                    <div className="text-xs text-gray-500 mt-1">= 2,520 pts</div>
+                                                </div>
+                                                <div className="bg-green-100 rounded-lg p-3 border-2 border-green-400">
+                                                    <div className="text-xs text-gray-600 mb-1">4. Valor final</div>
+                                                    <div className="font-bold text-lg text-green-600">$37,800</div>
+                                                    <div className="text-xs text-gray-500 mt-1">2,520 × $15</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Win-Win Card */}
+                                <div className="bg-white rounded-2xl shadow-xl p-8">
+                                    <h2 className="text-3xl font-bold mb-6">🤝 Sistema Win-Win</h2>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div className="bg-green-50 rounded-xl p-6 border-2 border-green-300">
+                                            <div className="text-4xl mb-3">👨‍⚕️</div>
+                                            <h3 className="text-2xl font-bold mb-4 text-green-900">Médicos Ganan</h3>
+                                            <ul className="space-y-3 text-gray-700">
+                                                <li className="flex items-start">
+                                                    <span className="text-green-600 mr-2 font-bold">✓</span>
+                                                    <span><strong>2-3x más valor percibido</strong> que comisiones</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <span className="text-green-600 mr-2 font-bold">✓</span>
+                                                    <span>Beneficios deducibles de impuestos (30% ahorro)</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <span className="text-green-600 mr-2 font-bold">✓</span>
+                                                    <span>Inversión real en desarrollo profesional</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <span className="text-green-600 mr-2 font-bold">✓</span>
+                                                    <span>Beneficios prácticos (vuelos, hoteles, tarjetas)</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <div className="bg-blue-50 rounded-xl p-6 border-2 border-blue-300">
+                                            <div className="text-4xl mb-3">🏢</div>
+                                            <h3 className="text-2xl font-bold mb-4 text-blue-900">INNVIDA Gana</h3>
+                                            <ul className="space-y-3 text-gray-700">
+                                                <li className="flex items-start">
+                                                    <span className="text-blue-600 mr-2 font-bold">✓</span>
+                                                    <span><strong>67-91% ahorro</strong> vs comisiones actuales</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <span className="text-blue-600 mr-2 font-bold">✓</span>
+                                                    <span>Mayor lealtad y retención de médicos</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <span className="text-blue-600 mr-2 font-bold">✓</span>
+                                                    <span>Diferenciación competitiva única</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <span className="text-blue-600 mr-2 font-bold">✓</span>
+                                                    <span>Escalable y financieramente viable</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Números Clave */}
+                                <div className="bg-white rounded-2xl shadow-xl p-8">
+                                    <h2 className="text-3xl font-bold mb-6">📈 Números Clave</h2>
+                                    
+                                    {(() => {
+                                        const elite = calcularViabilidadINNVIDA('elite');
+                                        const avanzado = calcularViabilidadINNVIDA('avanzado');
+                                        const profesional = calcularViabilidadINNVIDA('profesional');
+                                        
+                                        const totalComisiones = 
+                                            (elite.comisionAnio * circulos.elite.medicos) +
+                                            (avanzado.comisionAnio * circulos.avanzado.medicos) +
+                                            (profesional.comisionAnio * circulos.profesional.medicos);
+                                        
+                                        const totalCostosReales = 
+                                            (elite.costoRealAnio * circulos.elite.medicos) +
+                                            (avanzado.costoRealAnio * circulos.avanzado.medicos) +
+                                            (profesional.costoRealAnio * circulos.profesional.medicos);
+                                        
+                                        const ahorroTotal = totalComisiones - totalCostosReales;
+                                        const ahorroPorc = ((ahorroTotal / totalComisiones) * 100).toFixed(1);
+                                        
+                                        return (
+                                            <div className="grid md:grid-cols-4 gap-6">
+                                                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 text-center">
+                                                    <div className="text-sm text-gray-600 mb-2">Médicos Totales</div>
+                                                    <div className="text-5xl font-black text-blue-600">300</div>
+                                                    <div className="text-sm text-gray-600 mt-2">3 niveles</div>
+                                                </div>
+
+                                                <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 text-center">
+                                                    <div className="text-sm text-gray-600 mb-2">Costo Actual</div>
+                                                    <div className="text-4xl font-black text-red-600">${(totalComisiones/1000000).toFixed(0)}M</div>
+                                                    <div className="text-sm text-gray-600 mt-2">comisiones/año</div>
+                                                </div>
+
+                                                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 text-center">
+                                                    <div className="text-sm text-gray-600 mb-2">Costo Programa</div>
+                                                    <div className="text-4xl font-black text-green-600">${(totalCostosReales/1000000).toFixed(0)}M</div>
+                                                    <div className="text-sm text-gray-600 mt-2">beneficios/año</div>
+                                                </div>
+
+                                                <div className="bg-gradient-to-br from-yellow-400 to-orange-400 text-white rounded-xl p-6 text-center border-4 border-orange-500">
+                                                    <div className="text-sm mb-2 font-bold">AHORRO TOTAL</div>
+                                                    <div className="text-4xl font-black">${(ahorroTotal/1000000).toFixed(0)}M</div>
+                                                    <div className="text-2xl font-bold mt-2">{ahorroPorc}%</div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+
+                                {/* Comparativa por Nivel */}
+                                <div className="bg-white rounded-2xl shadow-xl p-8">
+                                    <h2 className="text-3xl font-bold mb-6">💎 Comparativa por Nivel</h2>
+                                    <div className="space-y-6">
+                                        {['elite', 'avanzado', 'profesional'].map(nivel => {
+                                            const data = circulos[nivel];
+                                            const compMed = calcularValorMedico(nivel);
+                                            const compINN = calcularViabilidadINNVIDA(nivel);
+                                            
+                                            return (
+                                                <div key={nivel} className="border-2 border-gray-200 rounded-xl p-6">
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <h3 className="text-2xl font-bold">{data.nombre}</h3>
+                                                        <div className={`${data.badge} px-6 py-2 rounded-lg font-bold`}>
+                                                            {data.medicos} médicos
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid md:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <div className="text-sm text-gray-600 mb-1">Valor para Médico</div>
+                                                            <div className="text-2xl font-black text-green-600">+{compMed.mejorQue}%</div>
+                                                            <div className="text-xs text-gray-500">vs comisiones</div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-sm text-gray-600 mb-1">Ahorro INNVIDA</div>
+                                                            <div className="text-2xl font-black text-blue-600">{compINN.ahorroPorc}%</div>
+                                                            <div className="text-xs text-gray-500">vs comisiones</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* CTA */}
+                                <div className="bg-gradient-to-r from-blue-900 to-purple-900 text-white rounded-3xl p-10 text-center">
+                                    <h2 className="text-4xl font-black mb-4">✅ Recomendación</h2>
+                                    <p className="text-2xl mb-8">
+                                        Sistema <strong>financieramente viable</strong> y <strong>estratégicamente superior</strong><br/>
+                                        para el crecimiento sostenible de INNVIDA
+                                    </p>
+                                    <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                                        <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6">
+                                            <div className="text-6xl font-black text-green-300 mb-2">67-91%</div>
+                                            <div className="text-xl">Ahorro INNVIDA</div>
+                                        </div>
+                                        <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6">
+                                            <div className="text-6xl font-black text-yellow-300 mb-2">+142-242%</div>
+                                            <div className="text-xl">Más valor médicos</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB: CÓMO CANJEAR */}
+                        {activeTab === 'canje' && (
+                            <div className="space-y-8">
+                                <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-3xl p-10">
+                                    <h1 className="text-5xl font-black mb-4">🎯 Cómo Funciona el Sistema</h1>
+                                    <p className="text-2xl opacity-90">Ultra-simple en 3 pasos</p>
+                                </div>
+
+                                {/* 3 Pasos */}
+                                <div className="grid md:grid-cols-3 gap-6">
+                                    <div className="bg-white rounded-2xl shadow-xl p-8 text-center card-hover">
+                                        <div className="w-20 h-20 bg-blue-500 text-white rounded-full flex items-center justify-center text-4xl font-black mx-auto mb-4">1</div>
+                                        <h3 className="text-2xl font-bold mb-4">Prescribe</h3>
+                                        <p className="text-gray-700">Cada prueba Nomad ($90k) o infusión Sanaré genera puntos automáticamente en tu cuenta.</p>
+                                        <div className="mt-4 text-sm text-blue-600 font-bold">
+                                            Con app: +40% puntos extra
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white rounded-2xl shadow-xl p-8 text-center card-hover">
+                                        <div className="w-20 h-20 bg-purple-500 text-white rounded-full flex items-center justify-center text-4xl font-black mx-auto mb-4">2</div>
+                                        <h3 className="text-2xl font-bold mb-4">Acumula</h3>
+                                        <p className="text-gray-700">Revisa tu saldo en tiempo real. Ahorra para beneficios grandes o canjea mensualmente.</p>
+                                        <div className="mt-4 text-sm text-purple-600 font-bold">
+                                            Puntos válidos por 18 meses
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white rounded-2xl shadow-xl p-8 text-center card-hover">
+                                        <div className="w-20 h-20 bg-green-500 text-white rounded-full flex items-center justify-center text-4xl font-black mx-auto mb-4">3</div>
+                                        <h3 className="text-2xl font-bold mb-4">Canjea</h3>
+                                        <p className="text-gray-700">Elige beneficios del catálogo y solicita el canje. Recibe confirmación en 48 hrs.</p>
+                                        <div className="mt-4 text-sm text-green-600 font-bold">
+                                            Proceso 100% digital
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Ejemplo Práctico */}
+                                <div className="bg-white rounded-2xl shadow-xl p-8">
+                                    <h2 className="text-3xl font-bold mb-6">📖 Ejemplo: Dr. García (CÍRCULO AVANZADO)</h2>
+                                    
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div className="bg-blue-50 rounded-xl p-6">
+                                            <h3 className="font-bold text-xl mb-4">📊 En 6 meses acumuló:</h3>
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between items-center pb-2 border-b">
+                                                    <span>18 Pruebas Nomad</span>
+                                                    <span className="font-bold">45,360 pts</span>
+                                                </div>
+                                                <div className="text-xs text-gray-600 pl-4">
+                                                    18 × 2,520 pts (con app)
+                                                </div>
+                                                <div className="flex justify-between items-center pb-2 border-b">
+                                                    <span>Infusiones</span>
+                                                    <span className="font-bold">26,880 pts</span>
+                                                </div>
+                                                <div className="flex justify-between items-center pt-3 text-2xl font-black text-blue-600 border-t-2">
+                                                    <span>Total:</span>
+                                                    <span>72,240 pts</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-green-50 rounded-xl p-6 border-l-4 border-green-500">
+                                            <h3 className="font-bold text-xl mb-4">🎁 Decidió canjear:</h3>
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between items-center">
+                                                    <span>1 Congreso Internacional</span>
+                                                    <span className="font-bold text-green-600">8,400 pts</span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span>10 Vuelos Nacionales</span>
+                                                    <span className="font-bold text-green-600">3,600 pts</span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span>Contador Fiscal Anual</span>
+                                                    <span className="font-bold text-green-600">3,600 pts</span>
+                                                </div>
+                                                <div className="border-t-2 border-green-300 pt-3 mt-3">
+                                                    <div className="flex justify-between font-bold text-lg">
+                                                        <span>Puntos usados:</span>
+                                                        <span className="text-red-600">-15,600 pts</span>
+                                                    </div>
+                                                    <div className="flex justify-between font-bold text-2xl text-green-600 mt-2">
+                                                        <span>Restante:</span>
+                                                        <span>56,640 pts</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-xl p-6 text-center">
+                                        <div className="font-bold text-2xl mb-2">💰 Valor Real Recibido</div>
+                                        <div className="text-5xl font-black mb-2">$260,000</div>
+                                        <div className="text-xl">Congreso + Vuelos + Contador (con descuentos 10%)</div>
+                                    </div>
+                                </div>
+
+                                {/* Reglas */}
+                                <div className="bg-white rounded-2xl shadow-xl p-8">
+                                    <h2 className="text-3xl font-bold mb-6">📜 Reglas Simples</h2>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div className="bg-blue-50 rounded-lg p-6">
+                                            <div className="text-3xl mb-3">✅</div>
+                                            <h3 className="font-bold text-lg mb-3">SÍ puedes:</h3>
+                                            <ul className="space-y-2 text-gray-700">
+                                                <li>• Acumular puntos sin límite</li>
+                                                <li>• Canjear cuando quieras</li>
+                                                <li>• Combinar múltiples beneficios</li>
+                                                <li>• Ver saldo en tiempo real</li>
+                                            </ul>
+                                        </div>
+                                        <div className="bg-red-50 rounded-lg p-6">
+                                            <div className="text-3xl mb-3">❌</div>
+                                            <h3 className="font-bold text-lg mb-3">NO puedes:</h3>
+                                            <ul className="space-y-2 text-gray-700">
+                                                <li>• Transferir puntos</li>
+                                                <li>• Canjear por efectivo</li>
+                                                <li>• Usar puntos vencidos (18 meses)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB: TABLA EQUIVALENCIAS */}
+                        {activeTab === 'equivalencias' && (
+                            <div className="space-y-8">
+                                <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-3xl p-10">
+                                    <h1 className="text-4xl font-black mb-4">💰 Tabla de Equivalencias</h1>
+                                    <p className="text-xl opacity-90">Todas las pruebas valen $90,000 MXN</p>
+                                </div>
+
+                                <div className="bg-white rounded-2xl shadow-xl p-8">
+                                    <h2 className="text-2xl font-bold mb-4">🧬 NOMAD GENETICS</h2>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr className="bg-blue-600 text-white">
+                                                    <th className="py-3 px-4 text-left">Prueba</th>
+                                                    <th className="py-3 px-4 text-center">Precio</th>
+                                                    <th className="py-3 px-4 text-center">Puntos Base</th>
+                                                    <th className="py-3 px-4 text-center">Puntos App</th>
+                                                    <th className="py-3 px-4 text-center">Valor</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {tablaEquivalencias.nomad.map((item, idx) => (
+                                                    <tr key={idx} className="border-b hover:bg-blue-50">
+                                                        <td className="py-3 px-4">{item.prueba}</td>
+                                                        <td className="py-3 px-4 text-center font-bold">${item.precio.toLocaleString()}</td>
+                                                        <td className="py-3 px-4 text-center">{item.puntosBase.toLocaleString()}</td>
+                                                        <td className="py-3 px-4 text-center font-bold text-green-600">{item.puntosApp.toLocaleString()}</td>
+                                                        <td className="py-3 px-4 text-center">${(item.puntosApp * 15).toLocaleString()}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-2xl shadow-xl p-8">
+                                    <h2 className="text-2xl font-bold mb-4">💉 SANARÉ - Infusiones</h2>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr className="bg-purple-600 text-white">
+                                                    <th className="py-3 px-4 text-left">Tratamiento</th>
+                                                    <th className="py-3 px-4 text-center">Precio</th>
+                                                    <th className="py-3 px-4 text-center">Comisión 20%</th>
+                                                    <th className="py-3 px-4 text-center">Puntos App</th>
+                                                    <th className="py-3 px-4 text-center">Valor</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {tablaEquivalencias.sanare.map((item, idx) => (
+                                                    <tr key={idx} className="border-b hover:bg-purple-50">
+                                                        <td className="py-3 px-4">{item.tratamiento}</td>
+                                                        <td className="py-3 px-4 text-center font-bold">${item.precio.toLocaleString()}</td>
+                                                        <td className="py-3 px-4 text-center text-blue-600">${item.comision20pct.toLocaleString()}</td>
+                                                        <td className="py-3 px-4 text-center font-bold text-green-600">{item.puntosApp.toLocaleString()}</td>
+                                                        <td className="py-3 px-4 text-center">${(item.puntosApp * 15).toLocaleString()}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB: CÍRCULOS/BENEFICIOS */}
+                        {activeTab === 'circulos' && (
+                            <div className="space-y-8">
+                                <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-3xl p-10">
+                                    <h1 className="text-4xl font-black mb-4">💎 Catálogo de Beneficios</h1>
+                                    <p className="text-xl opacity-90">Por nivel del círculo</p>
+                                </div>
+
+                                <div className="bg-white rounded-2xl shadow-xl p-6">
+                                    <div className="flex flex-wrap gap-4 justify-center">
+                                        {['elite', 'avanzado', 'profesional'].map(circ => (
+                                            <button
+                                                key={circ}
+                                                onClick={() => setSelectedCirculo(circ)}
+                                                className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${
+                                                    selectedCirculo === circ
+                                                        ? `${circulos[circ].badge} shadow-xl scale-105`
+                                                        : 'bg-gray-200 hover:bg-gray-300'
+                                                }`}
+                                            >
+                                                {circulos[circ].nombre}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-2xl shadow-xl p-8">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div>
+                                            <h2 className="text-4xl font-black">{circuloData.nombre}</h2>
+                                            <p className="text-xl text-gray-600">{circuloData.subtitle}</p>
+                                        </div>
+                                        <div className={`${circuloData.badge} px-8 py-4 rounded-xl text-center`}>
+                                            <div className="text-4xl font-black">{circuloData.medicos}</div>
+                                            <div className="text-sm font-bold">médicos</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid md:grid-cols-2 gap-4 mb-6">
+                                        {circuloData.beneficios.map((ben, idx) => (
+                                            <div key={idx} className="border-2 border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div className="flex-1">
+                                                        <div className="font-bold">{ben.nombre}</div>
+                                                        {ben.detalle && <div className="text-xs text-gray-600 mt-1">{ben.detalle}</div>}
+                                                    </div>
+                                                    <div className="text-right ml-3">
+                                                        <div className="text-xs text-gray-500">Valor</div>
+                                                        <div className="font-bold text-purple-600">${ben.costo.toLocaleString()}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center justify-between pt-2 border-t">
+                                                    <div>
+                                                        {circuloData.descuentoBeneficios > 0 ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-gray-400 line-through text-sm">{ben.puntos.toLocaleString()}</span>
+                                                                <span className="bg-green-500 text-white px-2 py-1 rounded font-bold text-sm">{ben.puntosDesc.toLocaleString()} pts</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="bg-blue-500 text-white px-2 py-1 rounded font-bold text-sm">{ben.puntosDesc.toLocaleString()} pts</span>
+                                                        )}
+                                                    </div>
+                                                    {circuloData.descuentoBeneficios > 0 && (
+                                                        <div className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">
+                                                            -{circuloData.descuentoBeneficios*100}%
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB: VALOR MÉDICOS */}
+                        {activeTab === 'medicos' && (
+                            <div className="space-y-8">
+                                <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-3xl p-10">
+                                    <h1 className="text-4xl font-black mb-4">👨‍⚕️ Valor para Médicos</h1>
+                                    <p className="text-xl opacity-90">Por qué perciben 2-3x más valor</p>
+                                </div>
+
+                                {['elite', 'avanzado', 'profesional'].map(nivel => {
+                                    const data = circulos[nivel];
+                                    const comp = calcularValorMedico(nivel);
+                                    return (
+                                        <div key={nivel} className="bg-white rounded-2xl shadow-xl p-8">
+                                            <div className="flex items-center justify-between mb-6">
+                                                <h2 className="text-3xl font-bold">{data.nombre}</h2>
+                                                <div className={`${data.badge} px-6 py-2 rounded-lg font-bold`}>{data.subtitle}</div>
+                                            </div>
+                                            <div className="grid md:grid-cols-2 gap-6">
+                                                <div className="bg-red-50 border-2 border-red-300 rounded-xl p-6">
+                                                    <h3 className="text-xl font-bold mb-4 text-red-900">❌ Comisiones</h3>
+                                                    <div className="text-4xl font-black text-red-700">${comp.comisionAnio.toLocaleString()}/año</div>
+                                                    <div className="text-sm text-red-700 mt-2">⚠️ Sujeto a impuestos<br/>⚠️ No invierte en carrera</div>
+                                                </div>
+                                                <div className="bg-green-50 border-4 border-green-500 rounded-xl p-6">
+                                                    <h3 className="text-xl font-bold mb-4 text-green-900">✅ Programa</h3>
+                                                    <div className="space-y-2">
+                                                        <div className="flex justify-between"><span>Beneficios:</span><span className="font-bold">${comp.valorBeneficiosAnio.toLocaleString()}</span></div>
+                                                        <div className="flex justify-between text-green-700"><span>+ Ahorro fiscal:</span><span className="font-bold">+${comp.ahorroFiscal.toLocaleString()}</span></div>
+                                                        <div className="border-t-2 pt-2"><div className="flex justify-between text-2xl font-black text-green-700"><span>Total:</span><span>${comp.valorTotal.toLocaleString()}</span></div></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-6 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-xl p-6 text-center">
+                                                <div className="text-xl font-bold mb-2">MÁS VALOR</div>
+                                                <div className="text-5xl font-black">+${comp.vsComisiones.toLocaleString()}</div>
+                                                <div className="text-2xl font-bold mt-2">¡{comp.mejorQue}% más!</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* TAB: VIABILIDAD INNVIDA */}
+                        {activeTab === 'viabilidad' && (
+                            <div className="space-y-8">
+                                <div className="bg-gradient-to-r from-blue-900 to-purple-900 text-white rounded-3xl p-10">
+                                    <h1 className="text-4xl font-black mb-4">🏢 Viabilidad INNVIDA</h1>
+                                    <p className="text-xl opacity-90">Modelo financiero con breakage 50% y costo real 25%</p>
+                                </div>
+
+                                <div className="bg-white rounded-2xl shadow-xl p-8">
+                                    <h2 className="text-3xl font-bold mb-6">🔑 Factores que Hacen Viable el Programa</h2>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-6">
+                                            <div className="text-3xl mb-3">📊</div>
+                                            <h3 className="text-2xl font-bold mb-3 text-yellow-900">Breakage 50%</h3>
+                                            <p className="text-gray-700 mb-3">Solo el 50% de puntos se canjean realmente:</p>
+                                            <ul className="text-sm text-gray-700 space-y-1">
+                                                <li>• Médicos acumulan pero no usan todos</li>
+                                                <li>• Puntos expiran (18 meses)</li>
+                                                <li>• Algunos salen del programa</li>
+                                            </ul>
+                                        </div>
+                                        <div className="bg-green-50 border-2 border-green-400 rounded-xl p-6">
+                                            <div className="text-3xl mb-3">💰</div>
+                                            <h3 className="text-2xl font-bold mb-3 text-green-900">Costo Real 25%</h3>
+                                            <p className="text-gray-700 mb-3">INNVIDA paga solo 25% del valor:</p>
+                                            <ul className="text-sm text-gray-700 space-y-1">
+                                                <li>• Congresos: acuerdos grupales</li>
+                                                <li>• Cursos: contenido propio</li>
+                                                <li>• Servicios: precios corporativos</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {['elite', 'avanzado', 'profesional'].map(nivel => {
+                                    const data = circulos[nivel];
+                                    const comp = calcularViabilidadINNVIDA(nivel);
+                                    return (
+                                        <div key={nivel} className="bg-white rounded-2xl shadow-xl p-8">
+                                            <div className="flex items-center justify-between mb-6">
+                                                <h2 className="text-3xl font-bold">{data.nombre}</h2>
+                                                <div className={`${data.badge} px-6 py-2 rounded-lg font-bold`}>{data.medicos} médicos</div>
+                                            </div>
+                                            <div className="grid md:grid-cols-4 gap-4 mb-6">
+                                                <div className="bg-blue-50 rounded-lg p-4 text-center">
+                                                    <div className="text-xs text-gray-600">Otorgados</div>
+                                                    <div className="text-xl font-black text-blue-600">{comp.puntosOtorgados.toLocaleString()}</div>
+                                                </div>
+                                                <div className="bg-yellow-50 rounded-lg p-4 text-center">
+                                                    <div className="text-xs text-gray-600">Canjeados</div>
+                                                    <div className="text-xl font-black text-yellow-600">{comp.puntosCanjeados.toLocaleString()}</div>
+                                                </div>
+                                                <div className="bg-purple-50 rounded-lg p-4 text-center">
+                                                    <div className="text-xs text-gray-600">Valor</div>
+                                                    <div className="text-xl font-black text-purple-600">${(comp.valorCanjeado/1000).toFixed(0)}K</div>
+                                                </div>
+                                                <div className="bg-green-50 rounded-lg p-4 text-center">
+                                                    <div className="text-xs text-gray-600">Costo Real</div>
+                                                    <div className="text-xl font-black text-green-600">${(comp.costoRealAnio/1000).toFixed(0)}K</div>
+                                                </div>
+                                            </div>
+                                            <div className="grid md:grid-cols-2 gap-6">
+                                                <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4">
+                                                    <div className="text-sm text-gray-600">Comisiones Actual</div>
+                                                    <div className="text-3xl font-black text-red-700">${comp.comisionAnio.toLocaleString()}</div>
+                                                </div>
+                                                <div className="bg-green-50 border-2 border-green-500 rounded-xl p-4">
+                                                    <div className="text-sm text-gray-600">Costo Programa</div>
+                                                    <div className="text-3xl font-black text-green-700">${comp.costoRealAnio.toLocaleString()}</div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-xl p-6 text-center">
+                                                <div className="text-lg font-bold">AHORRO INNVIDA</div>
+                                                <div className="text-4xl font-black">${comp.ahorroAnio.toLocaleString()}/año</div>
+                                                <div className="text-2xl font-bold">{comp.ahorroPorc}% menos costo</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+                                <div className="bg-gradient-to-r from-blue-900 to-purple-900 text-white rounded-3xl p-10">
+                                    <h2 className="text-4xl font-black mb-6 text-center">💰 Resumen Total (300 médicos)</h2>
+                                    {(() => {
+                                        const elite = calcularViabilidadINNVIDA('elite');
+                                        const avanzado = calcularViabilidadINNVIDA('avanzado');
+                                        const profesional = calcularViabilidadINNVIDA('profesional');
+                                        const totalComisiones = (elite.comisionAnio * 15) + (avanzado.comisionAnio * 60) + (profesional.comisionAnio * 225);
+                                        const totalCostos = (elite.costoRealAnio * 15) + (avanzado.costoRealAnio * 60) + (profesional.costoRealAnio * 225);
+                                        const ahorro = totalComisiones - totalCostos;
+                                        const porc = ((ahorro / totalComisiones) * 100).toFixed(1);
+                                        return (
+                                            <div className="grid md:grid-cols-3 gap-6">
+                                                <div className="bg-white/10 backdrop-blur rounded-xl p-6 text-center">
+                                                    <div className="text-sm opacity-80">Comisiones</div>
+                                                    <div className="text-4xl font-black">${(totalComisiones/1000000).toFixed(0)}M</div>
+                                                </div>
+                                                <div className="bg-white/10 backdrop-blur rounded-xl p-6 text-center">
+                                                    <div className="text-sm opacity-80">Programa</div>
+                                                    <div className="text-4xl font-black text-green-300">${(totalCostos/1000000).toFixed(0)}M</div>
+                                                </div>
+                                                <div className="bg-gradient-to-br from-yellow-400 to-orange-400 rounded-xl p-6 text-center border-4 border-white">
+                                                    <div className="text-sm font-bold">AHORRO</div>
+                                                    <div className="text-4xl font-black">${(ahorro/1000000).toFixed(0)}M</div>
+                                                    <div className="text-xl font-bold">{porc}%</div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+
+                    {/* Footer */}
+                    <div className="bg-gray-900 text-white py-12 mt-20">
+                        <div className="max-w-7xl mx-auto px-8 text-center">
+                            <div className="text-3xl font-black mb-2">INNVIDA PROFESSIONAL CIRCLE</div>
+                            <div className="text-gray-400 mb-6">Sistema Win-Win • Financieramente Viable</div>
+                            <div className="text-sm text-gray-500">
+                                Dashboard Completo v6.0 | Beneficios Reales México | Breakage 50% • Costo 25% | 2025
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<Dashboard />, document.getElementById('root'));
+    </script>
+</body>
+</html>
